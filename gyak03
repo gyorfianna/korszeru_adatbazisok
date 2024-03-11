@@ -1,0 +1,90 @@
+Készítsünk sorszámozott listát a szálláshelyek adatairól! 
+a. A lista legyen a szálláshely típusa szerint, azon belül hely szerint, majd a neve szerint növekvően rendezve! 
+b. A számozás típusonként kezdődjön újra!
+
+select * ron_number() over(partition by tipus order by tipus, hely, szallas_nev) from szallashely
+
+
+Készítsük listát, amely megjeleníti az ügyfelek azonosítóját, nevét és a foglalásainak kezdő- és befejező dátumát, valamint azt, hogy a foglalás összesen hány főre történt! 
+a. Egy új oszlopban jelenítsük meg azt is, hogy az ügyfél előző három foglalása összesen hány főre történt!
+
+select u.login, u.nev, f.mettol, f.meddig, f.felnott_szam, f.gyermek_szam,
+sum(f.felnott _szam + f.gyermek_szam) over(partition by u.login order by f.mettol
+rows between 3 preceding and 1 preceding)
+  from foglalás f join ügyfél u on f.ugyfel_fk = u (login)
+
+  Alakítsa át a melléklet 1. pontjában lévő lekérdezést úgy, hogy JOIN helyett CROSS APPLY-t alkalmaz!
+a. Válaszként adja meg az átalakított lekérdezés kódját!
+
+SELECT rt.TERMEKKOD, 
+       AVG(rt.EGYSEGAR) AS '�tlagos �r'
+FROM Rendeles_tetel rt JOIN Rendeles r
+     ON rt.SORSZAM = r.SORSZAM
+GROUP BY rt.TERMEKKOD
+
+átalakított:
+
+SELECT rt.TERMEKKOD, 
+       AVG(rt.EGYSEGAR) AS '�tlagos �r'
+FROM Rendeles_tetel rt 
+CROSS apply (
+    select * from rendeles
+    where rt.SORSZAM = r.SORSZAM
+    ) Rendeles r
+GROUP BY rt.TERMEKKOD
+
+
+Alakítsa át a melléklet 2. pontjában lévő lekérdezést úgy, hogy mindkét (INNER) JOIN részbe sorra beilleszti a tanult JOIN HINT-eket (először mindkét helyre MERGE, majd HASH, utána LOOP, végül REMOTE).
+a. Melyik hint használata adja a legjobb megoldást?
+b. Mi lesz ezt a hint-et tartalmazó lekérdezés kódja?
+
+SELECT rt.*,
+       u.nev,
+       SUM(rt.mennyiseg*rt.egysegar) 
+	   OVER(PARTITION BY r.LOGIN ORDER BY rt.SORSZAM, termekkod 
+	     RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) 
+	   AS 'Eddigi rendel�si t�telek �ssz�rt�ke'
+FROM Rendeles_tetel rt JOIN Rendeles r 
+     ON rt.SORSZAM = r.SORSZAM
+	 JOIN Ugyfel u ON r.LOGIN = u.LOGIN
+
+
+átalakított:
+
+SELECT rt.*,
+       u.nev,
+       SUM(rt.mennyiseg*rt.egysegar) 
+	   OVER(PARTITION BY r.LOGIN ORDER BY rt.SORSZAM, termekkod 
+	     RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) 
+	   AS 'Eddigi rendel�si t�telek �ssz�rt�ke'
+FROM Rendeles_tetel rt MERGE JOIN Rendeles r 
+     ON rt.SORSZAM = r.SORSZAM
+	 merge JOIN Ugyfel u ON r.LOGIN = u.LOGIN
+
+SELECT rt.*,
+       u.nev,
+       SUM(rt.mennyiseg*rt.egysegar) 
+	   OVER(PARTITION BY r.LOGIN ORDER BY rt.SORSZAM, termekkod 
+	     RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) 
+	   AS 'Eddigi rendel�si t�telek �ssz�rt�ke'
+FROM Rendeles_tetel rt HASH JOIN Rendeles r 
+     ON rt.SORSZAM = r.SORSZAM
+	 HASH JOIN Ugyfel u ON r.LOGIN = u.LOGIN
+
+A mellékletben lévő 2. lekérdezéshez készítsen TABLE HINT-et a következőképpen:
+a. Először állítsa be, hogy a lekérdezésnél a Rendeles_tetel tábla esetén a PK_Rendeles_tetel index legyen használva. Futtassa le így a lekérdezést, majd jegyezze fel a lekérdezés futási idejét!
+b. Utána állítsa be, hogy a lekérdezésnél a Rendeles_tetel tábla esetén az NCI_sorszam_termekkod index legyen használva. Itt is futtassa a lekérdezéstm majd jegyezze meg a lekérdezés futási időt.
+c. Válaszként adja meg a gyorsabb változathoz tartozó lekérdezés kódját!
+
+SELECT rt.*,
+       u.nev,
+       SUM(rt.mennyiseg*rt.egysegar) 
+	   OVER(PARTITION BY r.LOGIN ORDER BY rt.SORSZAM, termekkod 
+	     RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) 
+	   AS 'Eddigi rendel�si t�telek �ssz�rt�ke'
+FROM Rendeles_tetel rt JOIN Rendeles r 
+     ON rt.SORSZAM = r.SORSZAM
+	 JOIN Ugyfel u ON r.LOGIN = u.LOGIN
+     option(table hint (rt, index (NCI_sorszam_termekkod_)))
+
+

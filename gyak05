@@ -1,0 +1,72 @@
+DECLARE @xml XML
+<CustomersOrders>
+ <Customer custid="1">
+ <!-- Comment 111 -->
+ <companyname>Customer NRZBB</companyname>
+ <Order orderid="10692">
+ <orderdate>2007-10-03T00:00:00</orderdate>
+ </Order>
+ <Order orderid="10702">
+ <orderdate>2007-10-13T00:00:00</orderdate>
+ </Order>
+ <Order orderid="10952">
+ <orderdate>2008-03-16T00:00:00</orderdate>
+ </Order>
+ </Customer>
+ <Customer custid="2">
+ <!-- Comment 222 --> 
+ <companyname>Customer MLTDN</companyname>
+ <Order orderid="10308">
+ <orderdate>2006-09-18T00:00:00</orderdate>
+ </Order>
+ <Order orderid="10952">
+ <orderdate>2008-03-04T00:00:00</orderdate>
+ </Order>
+ </Customer>
+</CustomersOrders>
+
+SELECT @xml.query ('/CustomersOrders/Customer/Order')
+
+select szoba_ID, szobak_szama from szoba where klimas ='i' and ferohely+potagy >=4
+for xml auto elements
+
+#8.
+declare  int
+DECLARE @doc XML
+set @
+<CustomersOrders>
+ <Customer custid="1">
+ <!-- Comment 111 -->
+ <companyname>Customer NRZBB</companyname>
+ <Order orderid="10692">
+ <orderdate>2007-10-03T00:00:00</orderdate>
+ </Order>
+ <Order orderid="10702">
+ <orderdate>2007-10-13T00:00:00</orderdate>
+ </Order>
+ <Order orderid="10952">
+ <orderdate>2008-03-16T00:00:00</orderdate>
+ </Order>
+ </Customer>
+ <Customer custid="2">
+ <!-- Comment 222 --> 
+ <companyname>Customer MLTDN</companyname>
+ <Order orderid="10308">
+ <orderdate>2006-09-18T00:00:00</orderdate>
+ </Order>
+ <Order orderid="10952">
+ <orderdate>2008-03-04T00:00:00</orderdate>
+ </Order>
+ </Customer>
+</CustomersOrders>
+
+29dik dia
+2sor SELECT @xml.idoc ('/CustomersOrders/Customer/Order')
+with (orderid int '@orderid',
+orderdate date 'orderdate'
+)
+
+
+
+
+
